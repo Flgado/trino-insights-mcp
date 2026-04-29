@@ -1,0 +1,15 @@
+trino-insights-mcp
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+
+github-mcp-server/
+
+.env
+.env.*
+!.env.example

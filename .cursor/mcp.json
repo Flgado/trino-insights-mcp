@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "trino-insights": {
+      "command": "/bin/sh",
+      "args": [
+        "./scripts/cursor-mcp.sh"
+      ],
+      "env": {
+        "TRINO_INSIGHTS_COORDINATOR_URL": "http://your-trino:8080",
+        "TRINO_INSIGHTS_USER": "your-user"
+      }
+    }
+  }
+}
