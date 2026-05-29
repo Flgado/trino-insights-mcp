@@ -1,0 +1,63 @@
+name: Feature request
+description: A new tool, rule, connector pattern, or capability.
+title: "[feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests with a concrete use case are 10× more likely to land. The "why" is the hard part — the "what" is usually easy.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feature?
+      options:
+        - New diagnostic rule
+        - New connector-aware pattern (unpushable-expression catalogue entry)
+        - New MCP tool
+        - New field in QueryFacts
+        - Configuration / threshold tuning knob
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or anti-pattern. Ideally with a real query you can reference (even anonymised).
+      placeholder: |
+        When I run queries that join Iceberg with PostgreSQL, the report doesn't ...
+        It would be much more useful if ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed shape
+      description: |
+        For rules: the signal it detects, the threshold(s), the evidence shape.
+        For tools: the input/output contract.
+        Don't worry about getting this right — it's a starting point, not a spec.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Did you work around this manually? Use a different tool? Hit a dead end with an existing rule?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submit checklist
+      options:
+        - label: I have searched existing issues for this feature.
+          required: true
+        - label: I am open to contributing this myself (we'll help you get started — see CONTRIBUTING.md).
+          required: false

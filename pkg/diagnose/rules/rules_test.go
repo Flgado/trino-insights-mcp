@@ -424,6 +424,102 @@ func TestLongBlocked_NotFired(t *testing.T) {
 	}
 }
 
+func TestLongBlocked_NotFired_BelowAbsoluteFloor(t *testing.T) {
+	// 600 ms blocked out of 1,000 ms scheduled = 60% (above 40% ratio)
+	// but the absolute wait is only 600 ms — below the 2,000 ms floor.
+	// This protects against false positives on sub-second queries.
+	f := baseFacts()
+	f.Time.TotalBlockedMs = 600
+	f.Time.TotalScheduledMs = 1000
+
+	if (LongBlocked{}).Eval(f) != nil {
+		t.Error("should not fire when blocked < 2000 ms even with high ratio")
+	}
+}
+
+func TestLongBlocked_RespectsCustomAbsoluteFloor(t *testing.T) {
+	f := baseFacts()
+	f.Time.TotalBlockedMs = 1500
+	f.Time.TotalScheduledMs = 2500
+
+	if (LongBlocked{}).Eval(f) != nil {
+		t.Error("default 2000 ms floor should suppress 1500 ms blocked")
+	}
+	if (LongBlocked{MinBlockedMs: 500}).Eval(f) == nil {
+		t.Error("custom 500 ms floor should allow 1500 ms blocked to fire")
+	}
+}
+
+func TestPoorSelectivity_NotFired_OnSummaryAggregation(t *testing.T) {
+	// COUNT(*) shape: aggregation operator emits 1 row from millions of input.
+	// Selectivity is by design < 0.0001 but the rule MUST NOT flag it.
+	f := baseFacts()
+	f.IO.ProcessedInputPos = 100_000_000
+	f.IO.OutputPositions = 1
+	f.Stages = []queryinfo.StageFact{
+		{
+			StageID:         "20260419_080123_00042_abcde.0",
+			TotalCPUMs:      2000,
+			PrimaryOperator: "AggregationOperator",
+			Operators: []queryinfo.OperatorFact{
+				{OperatorType: "ScanFilterProjectOperator", InputRows: 100_000_000, OutputRows: 100_000_000},
+				{OperatorType: "AggregationOperator", InputRows: 100_000_000, OutputRows: 1, Amplification: 0},
+			},
+		},
+	}
+
+	if (PoorSelectivity{}).Eval(f) != nil {
+		t.Error("should not fire when an aggregation operator produces <= 100 rows (summary query)")
+	}
+}
+
+func TestPoorSelectivity_NotFired_OnSmallGroupBy(t *testing.T) {
+	f := baseFacts()
+	f.IO.ProcessedInputPos = 100_000_000
+	f.IO.OutputPositions = 50
+	f.Stages = []queryinfo.StageFact{
+		{
+			StageID:         "20260419_080123_00042_abcde.0",
+			TotalCPUMs:      2000,
+			PrimaryOperator: "HashAggregationOperator",
+			Operators: []queryinfo.OperatorFact{
+				{OperatorType: "HashAggregationOperator", InputRows: 100_000_000, OutputRows: 50, Amplification: 0},
+			},
+		},
+	}
+
+	if (PoorSelectivity{}).Eval(f) != nil {
+		t.Error("should not fire on GROUP BY producing <= 100 groups")
+	}
+}
+
+func TestPoorSelectivity_Fires_LargeGroupByIsStillSuspicious(t *testing.T) {
+	// 100M input -> 50K output via aggregation is 0.0005 selectivity (above
+	// the 0.0001 threshold). Below threshold the rule needn't fire at all,
+	// but we want to confirm the aggregation suppression doesn't accidentally
+	// suppress legitimate cases. So drop the threshold below 0.0005.
+	f := baseFacts()
+	f.IO.ProcessedInputPos = 100_000_000
+	f.IO.OutputPositions = 1000
+	f.Stages = []queryinfo.StageFact{
+		{
+			StageID:         "20260419_080123_00042_abcde.0",
+			TotalCPUMs:      2000,
+			PrimaryOperator: "HashAggregationOperator",
+			Operators: []queryinfo.OperatorFact{
+				{OperatorType: "HashAggregationOperator", InputRows: 100_000_000, OutputRows: 1000, Amplification: 0},
+			},
+		},
+	}
+
+	// Output 1000 is well above the AggregationOutputFloor of 100, so we DO
+	// want the rule to fire here — a 1000-group aggregation that reads 100M
+	// rows is still worth flagging as poor selectivity.
+	if (PoorSelectivity{}).Eval(f) == nil {
+		t.Error("should fire when aggregation output is large (> 100 rows) even on aggregation queries")
+	}
+}
+
 func TestRowExplosion_Fires(t *testing.T) {
 	f := baseFacts()
 	f.Stages = []queryinfo.StageFact{

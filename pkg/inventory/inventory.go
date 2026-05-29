@@ -74,11 +74,11 @@ func (i *Inventory) RegisterAll(_ context.Context, server *mcp.Server, deps any)
 // --- Builder ---
 
 type Builder struct {
-	allTools    []ServerTool
-	toolsets    []string // nil = use defaults
-	tools       []string // additive opt-ins
-	exclude     []string
-	readOnly    bool
+	allTools []ServerTool
+	toolsets []string // nil = use defaults
+	tools    []string // additive opt-ins
+	exclude  []string
+	readOnly bool
 }
 
 func NewBuilder() *Builder {

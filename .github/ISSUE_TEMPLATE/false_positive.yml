@@ -1,0 +1,76 @@
+name: False positive / wrong finding
+description: A diagnostic rule produced a finding that's wrong or misleading.
+title: "[finding] trino.<rule-id>: "
+labels: ["false-positive", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Wrong findings are the most valuable feedback we get — they almost always turn into regression tests. Thanks for taking the time to file this.
+
+  - type: input
+    id: rule-id
+    attributes:
+      label: Which rule fired wrongly?
+      description: The exact `rule_id` from the finding. Find it under `findings[].rule_id` in the `analyze_query` response.
+      placeholder: trino.long-blocked
+    validations:
+      required: true
+
+  - type: textarea
+    id: finding
+    attributes:
+      label: The misleading finding
+      description: Paste the full finding JSON, or at minimum the `title` + `details`.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: why-wrong
+    attributes:
+      label: Why is this wrong?
+      description: |
+        Be specific. The most useful framings are:
+          - "The connector DID push this predicate; here's the SQL trace from the source side."
+          - "This is a `SELECT COUNT(*)` aggregation — the low selectivity is by design."
+          - "The blocked time was only 600 ms — way below the threshold this rule claims to use."
+    validations:
+      required: true
+
+  - type: textarea
+    id: plan-text
+    attributes:
+      label: Verbatim plan text (if relevant)
+      description: |
+        For pushdown-related rules, paste the exact `LocalFilter` and `pushed_constraint_columns` from the plan. Anonymise table/column names if needed but keep the syntactic structure intact.
+      render: text
+    validations:
+      required: false
+
+  - type: input
+    id: query-id
+    attributes:
+      label: Query ID (if you can share)
+      description: We won't be able to reproduce against your cluster, but the ID helps us cross-reference if you can attach context.
+      placeholder: 20260419_080123_00042_abcde
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: trino-insights-mcp version
+      placeholder: v0.1.0
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submit checklist
+      options:
+        - label: I have anonymised any sensitive table, column, or schema names.
+          required: true
+        - label: I have searched existing issues for this rule ID.
+          required: true

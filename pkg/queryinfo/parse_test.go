@@ -9,8 +9,8 @@ func TestParseDurationMs(t *testing.T) {
 	}{
 		{"", 0},
 		{"0.00ns", 0},
-		{"500.00us", 0},    // 0.5 ms rounds to 0
-		{"1000.00us", 1},   // 1 ms
+		{"500.00us", 0},  // 0.5 ms rounds to 0
+		{"1000.00us", 1}, // 1 ms
 		{"1.23ms", 1},
 		{"4.56ms", 4},
 		{"100.00ms", 100},

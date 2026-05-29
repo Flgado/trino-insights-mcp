@@ -1,6 +1,20 @@
 # Trino Insights MCP Server
 
-MCP server that turns LLM agents into a **Trino performance copilot**. It speaks the [Model Context Protocol](https://modelcontextprotocol.io) over stdio, fetches data from Trino's REST/UI APIs, projects it into compact agent-friendly DTOs, and exposes tools for per-query deep dives. Read-only by default; never submits or cancels SQL.
+[![CI](https://github.com/Flgado/trino-insights-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Flgado/trino-insights-mcp/actions/workflows/ci.yml)
+[![Release](https://github.com/Flgado/trino-insights-mcp/actions/workflows/release.yml/badge.svg)](https://github.com/Flgado/trino-insights-mcp/actions/workflows/release.yml)
+[![Go Version](https://img.shields.io/badge/go-1.25%2B-00ADD8?logo=go)](https://go.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP](https://img.shields.io/badge/MCP-Server-blue)](https://modelcontextprotocol.io)
+
+MCP server that turns any LLM agent (Claude, Cursor, Copilot, …) into a **Trino performance copilot**. Ask "why was query X slow?" and get a structured root-cause report with stage-level evidence, pushdown analysis, and concrete SQL-level remediations.
+
+**What you get:**
+
+- "This MongoDB scan spent 3.2 s returning zero rows because the `branch_id` index is missing" — not "blocked time is high".
+- "user_membership is scanned 4× in the same query due to CTE inlining; here are the redundant stages" — not "you have a lot of stages".
+- "The `COALESCE(json_array_length(...))` predicate cannot push to MySQL; rewrite as `(col IS NULL OR JSON_LENGTH(col) > 0)`" — not "consider optimizing the query".
+
+It speaks the [Model Context Protocol](https://modelcontextprotocol.io) over stdio, fetches data from Trino's REST/UI APIs, projects it into compact agent-friendly DTOs, and exposes tools for per-query deep dives. Read-only by default; never submits or cancels SQL.
 
 ---
 
@@ -180,23 +194,100 @@ Return the full SQL text of a Trino query, sanitized and truncated to the config
 
 ## Diagnostics
 
-The rule engine detects the following issues automatically:
+The rule engine detects the following issues automatically. Findings are
+ordered by severity (critical → warn → info) and each one carries evidence
+(stage IDs, operator names, exact filter expressions) plus a remediation
+hint the agent can turn into a concrete SQL diff.
 
-| Finding | Description |
-|---|---|
-| `trino.failed` | Query failed — error code and remediation |
-| `trino.cpu-bound` | CPU/scheduled ratio is high |
-| `trino.memory-pressure` | Peak per-task memory near node limit |
-| `trino.disk-spill` | Spilled to disk; identifies the operator |
-| `trino.queued-too-long` | Queued time >= 30% of total |
-| `trino.stage-skew` | Per-task CPU skew within a stage |
-| `trino.hotspot-stage` | One stage carries >= 60% of query CPU |
-| `trino.scan-too-large` | >= 1B rows or >= 100 GiB scanned |
-| `trino.poor-selectivity` | Very low output/input row ratio |
-| `trino.under-parallelised` | Very few drivers for elapsed time |
-| `trino.long-blocked` | Blocked >= 40% of scheduled time |
-| `trino.row-explosion` | Operator produces >= 10x more rows than it consumes |
-| `trino.missed-pushdown` | Optimizer pushdown rules tried but never applied |
+| Finding | Severity | Description |
+|---|---|---|
+| `trino.failed` | critical | Query failed — surfaces `error_type` + `error_code_name` |
+| `trino.memory-pressure` | warn | Peak per-task memory near node limit |
+| `trino.disk-spill` | warn | Spilled to disk; identifies the spilling operator |
+| `trino.cpu-bound` | warn | CPU/scheduled ratio is high |
+| `trino.stage-skew` | warn | Per-task CPU skew within a stage; falls back to stage-vs-stage |
+| `trino.hotspot-stage` | warn | One stage carries ≥ 60% of query CPU; names the operator |
+| `trino.row-explosion` | warn | Operator produces ≥ 10× more rows than it consumes (join fan-out) |
+| `trino.long-blocked` | warn | Blocked ≥ 40% of scheduled AND ≥ 2 s in absolute terms (sub-second floor protects against false positives) |
+| `trino.scan-too-large` | warn | ≥ 1 B rows or ≥ 100 GiB scanned |
+| `trino.local-filter-dominates` | warn | A scan returned many rows but a local (non-pushed) filter rejected most; names the exact `filterPredicate` |
+| `trino.duplicate-federated-scans` | warn | The same federated table is scanned 2+ times (usually CTE inlining → N parallel round-trips) |
+| `trino.iceberg-metadata-table-disables-pushdown` | warn | Iceberg `$data@<snapshot-id>`, `$files`, `$partitions` etc. disable predicate pushdown; the snapshot-pinned case has a direct `FOR VERSION AS OF` rewrite that preserves pushdown |
+| `trino.unpushable-expression` | warn | A `LocalFilter` contains a construct the target connector cannot push (function/CAST wrappers, MongoDB `CARDINALITY`/`element_at`, JDBC `COALESCE`, `JSON_EXTRACT` on Mongo/JDBC, …) with a connector-specific rewrite |
+| `trino.divergent-scan-rowcounts` | info | Sibling scans of the same table have wildly different row counts; observational evidence that a value-specific predicate IS pushing |
+| `trino.missed-pushdown` | info | Optimizer pushdown rules invoked but never applied; usually a connector limitation |
+| `trino.poor-selectivity` | info | Very low output/input row ratio (excludes summary aggregations — `COUNT`, `SUM`, small `GROUP BY` — so dashboard queries don't spam the report) |
+| `trino.slow-empty-scan` | info | A scan returned ZERO rows but the stage still spent meaningful wall-clock on the connector (missing index, source-side full scan, or slow plan) |
+| `trino.under-parallelised` | info | Very few drivers for elapsed time |
+| `trino.queued-too-long` | info | Queued time ≥ 30% of total |
+
+See [`docs/rules.md`](docs/rules.md) for thresholds, evidence shapes, and tuning knobs per rule.
+
+---
+
+## Example output
+
+Asking your agent *"Why was query 20260419_080123_00042_abcde slow?"* produces a structured Markdown report:
+
+```markdown
+> Query: 20260419_080123_00042_abcde · FINISHED · elapsed 14,320 ms · planning 1,180 ms · execution 13,140 ms
+
+## 1. TL;DR
+
+### 1.1 What this query does
+Paginated "list active members for branch X" query that drives the Members page; returns
+500 rows at a time with a total-count badge. Federates app_documents (MongoDB) for the
+member document, app_reporting (MySQL) for entitlements, and app_lakehouse
+(Iceberg) for the historical roster snapshot.
+
+### 1.2 Where the elapsed time went (wall-clock attribution)
+| Slice | Wall-clock | What it was |
+|---|---:|---|
+| Planning | 1,180 ms | Coordinator query compilation |
+| max(.5 MySQL, .9 Mongo, .11 MySQL) | ~9,200 ms | Parallel federated reads stalled on COALESCE-wrapped predicates that didn't push |
+| Join + aggregate (.2, .3) | ~3,600 ms | Back-pressure waiting on the scans above |
+| Output (.0) | ~340 ms | — |
+| **Total** | **~14,320 ms** | matches elapsed_ms |
+
+### 1.3 One-sentence diagnosis
+`user_credits` is scanned 4× for the same `branch_id` because Trino inlines CTEs by default,
+and the predicate cannot push to MySQL because of `json_array_length` wrapped in `COALESCE`.
+
+## 4. Findings
+
+### trino.unpushable-expression  ·  warn
+The `LocalFilter` on stage .11 contains `COALESCE("active", true)` — a JDBC pattern that
+cannot be pushed because COALESCE wraps a bare column ref. Trino fetches every row and
+filters in-process. Rewrite as `(active IS NULL OR active = true)`.
+
+### trino.duplicate-federated-scans  ·  warn
+`app_reporting.public.user_credits` is scanned in stages .5, .7, .11, .14 —
+each round-trip to MySQL costs ~1.2 s. Materialise the CTE upstream or use
+`session.cte_materialization_strategy='ALL'`.
+```
+
+The agent renders this with stage-by-stage tables, root-cause summaries,
+recommendations ranked by impact, and a verification checklist (deltas to
+recheck after the fix ships). See [`docs/rules.md`](docs/rules.md) for the
+full per-rule reference (thresholds, evidence shapes, and tuning knobs).
+
+---
+
+## Supported connectors
+
+The base rule set works on any Trino connector. The following have **connector-aware** intelligence (specific patterns, remediation advice, regression-tested fixtures):
+
+| Connector | Pushdown intelligence | Connector-specific rules |
+|---|---|---|
+| **Hive** | ✓ | partition-aware (planned) |
+| **Iceberg** | ✓ | `iceberg-metadata-table-disables-pushdown` (catches `$data@<snapshot>`, `$files`, `$partitions`, …) |
+| **MongoDB** | ✓ | `unpushable-expression` (CARDINALITY, element_at, JSON_EXTRACT) |
+| **MySQL** (JDBC) | ✓ | `unpushable-expression` (COALESCE-on-column, function wrappers) |
+| **PostgreSQL** (JDBC) | ✓ | `unpushable-expression` (COALESCE-on-column, function wrappers) |
+| Memory | basic | — |
+| Other JDBC / FS connectors | basic | inherits agnostic rules |
+
+Missing a connector? See [CONTRIBUTING.md](CONTRIBUTING.md) — adding a new connector-specific pattern is usually a one-file rule + a regression test using verbatim plan text.
 
 ---
 
@@ -221,6 +312,19 @@ go run ./cmd stdio
 
 ---
 
+## Contributing
+
+We welcome new rules, new connector patterns, and bug reports. See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
+- A 5-step walkthrough on how to add a new diagnostic rule
+- The evidence-shape conventions findings should follow
+- How to add a regression test using verbatim plan text from a real query
+- The PR review checklist
+
+Found a query Trino Insights gets wrong? Open an issue with the rule ID, the misleading output, and (if you can share it) a query ID or anonymised plan snippet. Real-world false positives and false negatives are the most valuable feedback we get.
+
+---
+
 ## License
 
-MIT
+[MIT](LICENSE) © Joao Folgado

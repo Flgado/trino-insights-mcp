@@ -54,9 +54,9 @@ func (r HotspotStage) Eval(facts *queryinfo.QueryFacts) *diagnose.Finding {
 	title := fmt.Sprintf("Hotspot %s dominates CPU", label)
 
 	return &diagnose.Finding{
-		RuleID:  "trino.hotspot-stage",
+		RuleID:   "trino.hotspot-stage",
 		Severity: diagnose.SeverityWarn,
-		Title:   title,
+		Title:    title,
 		Details: fmt.Sprintf("%s carries %d%% of total query CPU (%d ms of %d ms).",
 			capitalize(label), pctInt, maxCPU, totalCPU),
 		Evidence: map[string]any{

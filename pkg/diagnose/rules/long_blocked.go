@@ -7,9 +7,16 @@ import (
 	"github.com/Flgado/trino-insights-mcp/pkg/queryinfo"
 )
 
-// LongBlocked fires when blocked time >= 40% of scheduled time.
+// LongBlocked fires when blocked time >= 40% of scheduled time AND the
+// blocked total is non-trivial in absolute terms (default >= 2,000 ms).
+//
+// The absolute floor exists because the ratio alone is noisy on sub-second
+// queries: a query that spent 600 ms blocked out of 1,000 ms scheduled is
+// 60% blocked but the absolute wait is negligible — flagging it is just
+// noise that erodes trust in the rule engine.
 type LongBlocked struct {
-	Threshold float64 // default 0.40
+	Threshold    float64 // default 0.40 (40%)
+	MinBlockedMs int64   // default 2000 — absolute floor; ignore tiny waits
 }
 
 func (r LongBlocked) ID() string { return "trino.long-blocked" }
@@ -21,11 +28,22 @@ func (r LongBlocked) threshold() float64 {
 	return r.Threshold
 }
 
+func (r LongBlocked) minBlockedMs() int64 {
+	if r.MinBlockedMs <= 0 {
+		return 2000
+	}
+	return r.MinBlockedMs
+}
+
 func (r LongBlocked) Eval(facts *queryinfo.QueryFacts) *diagnose.Finding {
 	scheduled := facts.Time.TotalScheduledMs
 	blocked := facts.Time.TotalBlockedMs
 
 	if scheduled <= 0 || blocked <= 0 {
+		return nil
+	}
+
+	if blocked < r.minBlockedMs() {
 		return nil
 	}
 

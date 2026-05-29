@@ -76,22 +76,23 @@ type StagesWrapper struct {
 //   - GET /v1/query/{queryId}
 //   - GET /ui/api/query/{id}
 type QueryInfo struct {
-	QueryID         string        `json:"queryId"`
-	SessionUser     string        `json:"sessionUser,omitempty"`
-	SessionPrincipal string       `json:"sessionPrincipal,omitempty"`
-	SessionSource   string        `json:"sessionSource,omitempty"`
-	ResourceGroupID []string      `json:"resourceGroupId,omitempty"`
-	State           string        `json:"state"`
-	Scheduled       bool          `json:"scheduled"`
-	Self            string        `json:"self,omitempty"`
-	FieldNames      []string      `json:"fieldNames,omitempty"`
-	QueryTextPreview string       `json:"queryTextPreview,omitempty"`
-	Query           string        `json:"query,omitempty"`
-	PreparedQuery   string        `json:"preparedQuery,omitempty"`
-	UpdateType      string        `json:"updateType,omitempty"`
-	QueryStats      QueryStats    `json:"queryStats"`
-	Session         *QuerySession `json:"session,omitempty"`
-	Stages          *StagesWrapper `json:"stages,omitempty"`
+	QueryID          string           `json:"queryId"`
+	SessionUser      string           `json:"sessionUser,omitempty"`
+	SessionPrincipal string           `json:"sessionPrincipal,omitempty"`
+	SessionSource    string           `json:"sessionSource,omitempty"`
+	ResourceGroupID  []string         `json:"resourceGroupId,omitempty"`
+	State            string           `json:"state"`
+	Scheduled        bool             `json:"scheduled"`
+	Self             string           `json:"self,omitempty"`
+	FieldNames       []string         `json:"fieldNames,omitempty"`
+	QueryTextPreview string           `json:"queryTextPreview,omitempty"`
+	Query            string           `json:"query,omitempty"`
+	PreparedQuery    string           `json:"preparedQuery,omitempty"`
+	UpdateType       string           `json:"updateType,omitempty"`
+	QueryStats       QueryStats       `json:"queryStats"`
+	Session          *QuerySession    `json:"session,omitempty"`
+	Stages           *StagesWrapper   `json:"stages,omitempty"`
+	OutputStage      *NestedStageInfo `json:"outputStage,omitempty"`
 
 	ResetAuthorizationUser        bool                `json:"resetAuthorizationUser,omitempty"`
 	SetOriginalRoles              []any               `json:"setOriginalRoles,omitempty"`
@@ -205,18 +206,18 @@ type QueryStats struct {
 	LogicalWrittenDataSize        string `json:"logicalWrittenDataSize,omitempty"`
 	WrittenPositions              int    `json:"writtenPositions,omitempty"`
 
-	StageGCStatistics       []any               `json:"stageGcStatistics,omitempty"`
-	DynamicFiltersStats     DynamicFiltersStats  `json:"dynamicFiltersStats"`
-	CatalogMetadataMetrics  map[string]any       `json:"catalogMetadataMetrics,omitempty"`
-	ExchangeMetrics         map[string]any       `json:"exchangeMetrics,omitempty"`
-	OperatorSummaries       []OperatorSummary    `json:"operatorSummaries,omitempty"`
+	StageGCStatistics       []any                  `json:"stageGcStatistics,omitempty"`
+	DynamicFiltersStats     DynamicFiltersStats    `json:"dynamicFiltersStats"`
+	CatalogMetadataMetrics  map[string]any         `json:"catalogMetadataMetrics,omitempty"`
+	ExchangeMetrics         map[string]any         `json:"exchangeMetrics,omitempty"`
+	OperatorSummaries       []OperatorSummary      `json:"operatorSummaries,omitempty"`
 	OptimizerRulesSummaries []OptimizerRuleSummary `json:"optimizerRulesSummaries,omitempty"`
 
 	ProgressPercentage *float64 `json:"progressPercentage,omitempty"`
 	RunningPercentage  *float64 `json:"runningPercentage,omitempty"`
 }
 
-// StageInfo is a single stage in the flat stages list.
+// StageInfo is a single stage in the flat stages list (used by /ui/api/query/).
 type StageInfo struct {
 	StageID         string     `json:"stageId"`
 	State           string     `json:"state"`
@@ -229,38 +230,52 @@ type StageInfo struct {
 	Tables          any        `json:"tables,omitempty"`
 }
 
+// NestedStageInfo is the stage format returned by /v1/query/{id} where
+// outputStage contains the full tree with recursively nested subStages.
+type NestedStageInfo struct {
+	StageID         string            `json:"stageId"`
+	State           string            `json:"state"`
+	Plan            any               `json:"plan,omitempty"`
+	CoordinatorOnly bool              `json:"coordinatorOnly,omitempty"`
+	Types           []string          `json:"types,omitempty"`
+	StageStats      StageStats        `json:"stageStats"`
+	Tasks           []TaskInfo        `json:"tasks,omitempty"`
+	SubStages       []NestedStageInfo `json:"subStages,omitempty"`
+	Tables          any               `json:"tables,omitempty"`
+}
+
 // StageStats holds per-stage metrics. Field names match the real Trino JSON exactly.
 type StageStats struct {
-	TotalCpuTime       string `json:"totalCpuTime,omitempty"`
-	FailedCpuTime      string `json:"failedCpuTime,omitempty"`
-	TotalScheduledTime string `json:"totalScheduledTime,omitempty"`
+	TotalCpuTime        string `json:"totalCpuTime,omitempty"`
+	FailedCpuTime       string `json:"failedCpuTime,omitempty"`
+	TotalScheduledTime  string `json:"totalScheduledTime,omitempty"`
 	FailedScheduledTime string `json:"failedScheduledTime,omitempty"`
-	TotalBlockedTime   string `json:"totalBlockedTime,omitempty"`
+	TotalBlockedTime    string `json:"totalBlockedTime,omitempty"`
 
-	TotalTasks     int `json:"totalTasks,omitempty"`
-	RunningTasks   int `json:"runningTasks,omitempty"`
-	CompletedTasks int `json:"completedTasks,omitempty"`
-	FailedTasks    int `json:"failedTasks,omitempty"`
-	TotalDrivers   int `json:"totalDrivers,omitempty"`
-	QueuedDrivers  int `json:"queuedDrivers,omitempty"`
-	RunningDrivers int `json:"runningDrivers,omitempty"`
+	TotalTasks       int `json:"totalTasks,omitempty"`
+	RunningTasks     int `json:"runningTasks,omitempty"`
+	CompletedTasks   int `json:"completedTasks,omitempty"`
+	FailedTasks      int `json:"failedTasks,omitempty"`
+	TotalDrivers     int `json:"totalDrivers,omitempty"`
+	QueuedDrivers    int `json:"queuedDrivers,omitempty"`
+	RunningDrivers   int `json:"runningDrivers,omitempty"`
 	CompletedDrivers int `json:"completedDrivers,omitempty"`
-	BlockedDrivers int `json:"blockedDrivers,omitempty"`
+	BlockedDrivers   int `json:"blockedDrivers,omitempty"`
 
 	CumulativeUserMemory       float64 `json:"cumulativeUserMemory,omitempty"`
 	FailedCumulativeUserMemory float64 `json:"failedCumulativeUserMemory,omitempty"`
 
-	UserMemoryReservation     string `json:"userMemoryReservation,omitempty"`
-	RevocableMemoryReservation string `json:"revocableMemoryReservation,omitempty"`
-	TotalMemoryReservation    string `json:"totalMemoryReservation,omitempty"`
-	PeakUserMemoryReservation string `json:"peakUserMemoryReservation,omitempty"`
+	UserMemoryReservation          string `json:"userMemoryReservation,omitempty"`
+	RevocableMemoryReservation     string `json:"revocableMemoryReservation,omitempty"`
+	TotalMemoryReservation         string `json:"totalMemoryReservation,omitempty"`
+	PeakUserMemoryReservation      string `json:"peakUserMemoryReservation,omitempty"`
 	PeakRevocableMemoryReservation string `json:"peakRevocableMemoryReservation,omitempty"`
-	SpilledDataSize           string `json:"spilledDataSize,omitempty"`
+	SpilledDataSize                string `json:"spilledDataSize,omitempty"`
 
-	PhysicalInputDataSize    string `json:"physicalInputDataSize,omitempty"`
-	PhysicalInputPositions   int    `json:"physicalInputPositions,omitempty"`
-	PhysicalInputReadTime    string `json:"physicalInputReadTime,omitempty"`
-	PhysicalWrittenDataSize  string `json:"physicalWrittenDataSize,omitempty"`
+	PhysicalInputDataSize   string `json:"physicalInputDataSize,omitempty"`
+	PhysicalInputPositions  int    `json:"physicalInputPositions,omitempty"`
+	PhysicalInputReadTime   string `json:"physicalInputReadTime,omitempty"`
+	PhysicalWrittenDataSize string `json:"physicalWrittenDataSize,omitempty"`
 
 	InternalNetworkInputDataSize  string `json:"internalNetworkInputDataSize,omitempty"`
 	InternalNetworkInputPositions int    `json:"internalNetworkInputPositions,omitempty"`
@@ -284,19 +299,19 @@ type StageStats struct {
 
 // OperatorSummary is one operator's aggregated stats across all drivers in a pipeline.
 type OperatorSummary struct {
-	StageID                    int    `json:"stageId"`
-	PipelineID                 int    `json:"pipelineId"`
-	OperatorID                 int    `json:"operatorId"`
-	PlanNodeID                 string `json:"planNodeId"`
-	OperatorType               string `json:"operatorType"`
-	TotalDrivers               int    `json:"totalDrivers"`
-	AddInputCpu                string `json:"addInputCpu"`
-	GetOutputCpu               string `json:"getOutputCpu"`
-	InputPositions             int64  `json:"inputPositions"`
-	OutputPositions            int64  `json:"outputPositions"`
-	PeakUserMemoryReservation  string `json:"peakUserMemoryReservation"`
-	SpilledDataSize            string `json:"spilledDataSize"`
-	BlockedWall                string `json:"blockedWall"`
+	StageID                   int    `json:"stageId"`
+	PipelineID                int    `json:"pipelineId"`
+	OperatorID                int    `json:"operatorId"`
+	PlanNodeID                string `json:"planNodeId"`
+	OperatorType              string `json:"operatorType"`
+	TotalDrivers              int    `json:"totalDrivers"`
+	AddInputCpu               string `json:"addInputCpu"`
+	GetOutputCpu              string `json:"getOutputCpu"`
+	InputPositions            int64  `json:"inputPositions"`
+	OutputPositions           int64  `json:"outputPositions"`
+	PeakUserMemoryReservation string `json:"peakUserMemoryReservation"`
+	SpilledDataSize           string `json:"spilledDataSize"`
+	BlockedWall               string `json:"blockedWall"`
 }
 
 // TaskInfo is a single task within a stage.
@@ -318,11 +333,11 @@ type TaskStats struct {
 
 // InputRef represents a table/connector input in QueryInfo.inputs[].
 type InputRef struct {
-	CatalogName    string   `json:"catalogName,omitempty"`
-	Schema         string   `json:"schema,omitempty"`
-	Table          string   `json:"table,omitempty"`
-	ConnectorInfo  any      `json:"connectorInfo,omitempty"`
-	Columns        []any    `json:"columns,omitempty"`
+	CatalogName      string         `json:"catalogName,omitempty"`
+	Schema           string         `json:"schema,omitempty"`
+	Table            string         `json:"table,omitempty"`
+	ConnectorInfo    any            `json:"connectorInfo,omitempty"`
+	Columns          []any          `json:"columns,omitempty"`
 	ConnectorMetrics map[string]any `json:"connectorMetrics,omitempty"`
 }
 

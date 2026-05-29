@@ -26,7 +26,9 @@ func AnalyzeQueryTool(t translations.HelperFunc) inventory.ServerTool {
 				"Analyze a single Trino query: fetch its metrics from the coordinator, "+
 					"project them to compact facts, and run the rule engine to detect "+
 					"performance issues (CPU-bound, skew, memory pressure, spill, etc.). "+
-					"Returns a headline, findings with evidence, and the underlying facts. "+
+					"Returns a headline, findings with evidence, and the underlying facts "+
+					"including per-scan pushdown details (which predicates the connector accepted "+
+					"vs. which Trino filters locally). "+
 					"Always follow up with get_query_sql for a non-trivial diagnosis."),
 			Annotations: &mcp.ToolAnnotations{
 				Title:        t("TOOL_ANALYZE_QUERY_TITLE", "Analyze query"),

@@ -18,5 +18,11 @@ func DefaultEngine() *diagnose.Engine {
 		LongBlocked{},
 		RowExplosion{},
 		MissedPushdown{},
+		LocalFilterDominates{},
+		DuplicateFederatedScans{},
+		DivergentScanRowcounts{},
+		IcebergMetadataTable{},
+		UnpushableExpression{},
+		SlowEmptyScan{},
 	)
 }

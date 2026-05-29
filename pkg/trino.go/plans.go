@@ -25,8 +25,8 @@ func effectiveSQLBudget(contentWindowSize int) int {
 }
 
 type QueryAnalysis struct {
-	Headline string              `json:"headline"`
-	NextStep string              `json:"next_step,omitempty"`
-	Findings diagnose.Findings   `json:"findings"`
+	Headline string                `json:"headline"`
+	NextStep string                `json:"next_step,omitempty"`
+	Findings diagnose.Findings     `json:"findings"`
 	Facts    *queryinfo.QueryFacts `json:"facts"`
 }
