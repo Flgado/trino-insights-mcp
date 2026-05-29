@@ -285,11 +285,11 @@ func parseConstraintColumns(details []string) []string {
 			continue
 		}
 		open := strings.Index(line, "[")
-		close := strings.LastIndex(line, "]")
-		if open < 0 || close <= open {
+		closeIdx := strings.LastIndex(line, "]")
+		if open < 0 || closeIdx <= open {
 			continue
 		}
-		raw := line[open+1 : close]
+		raw := line[open+1 : closeIdx]
 		var cols []string
 		for _, part := range strings.Split(raw, ",") {
 			c := strings.TrimSpace(part)

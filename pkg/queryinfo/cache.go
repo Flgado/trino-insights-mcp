@@ -22,13 +22,13 @@ type cacheEntry struct {
 
 const nonTerminalTTLCap = 30 * time.Second
 
-func NewCachedFetcher(inner Fetcher, ttl time.Duration, cap int) *CachingFetcher {
+func NewCachedFetcher(inner Fetcher, ttl time.Duration, maxEntries int) *CachingFetcher {
 	if ttl <= 0 {
 		ttl = 5 * time.Minute
 	}
 
-	if cap <= 0 {
-		cap = 256
+	if maxEntries <= 0 {
+		maxEntries = 256
 	}
 
 	nonTerm := ttl
@@ -41,8 +41,8 @@ func NewCachedFetcher(inner Fetcher, ttl time.Duration, cap int) *CachingFetcher
 		Inner:          inner,
 		TTL:            ttl,
 		NonTerminalTTL: nonTerm,
-		Cap:            cap,
-		cache:          make(map[string]cacheEntry, cap),
+		Cap:            maxEntries,
+		cache:          make(map[string]cacheEntry, maxEntries),
 	}
 }
 

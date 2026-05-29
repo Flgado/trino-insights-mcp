@@ -167,8 +167,8 @@ type QueryStats struct {
 
 	TotalScheduledTime  string `json:"totalScheduledTime,omitempty"`
 	FailedScheduledTime string `json:"failedScheduledTime,omitempty"`
-	TotalCpuTime        string `json:"totalCpuTime,omitempty"`
-	FailedCpuTime       string `json:"failedCpuTime,omitempty"`
+	TotalCPUTime        string `json:"totalCpuTime,omitempty"`
+	FailedCPUTime       string `json:"failedCpuTime,omitempty"`
 	TotalBlockedTime    string `json:"totalBlockedTime,omitempty"`
 
 	FullyBlocked   bool     `json:"fullyBlocked,omitempty"`
@@ -246,8 +246,8 @@ type NestedStageInfo struct {
 
 // StageStats holds per-stage metrics. Field names match the real Trino JSON exactly.
 type StageStats struct {
-	TotalCpuTime        string `json:"totalCpuTime,omitempty"`
-	FailedCpuTime       string `json:"failedCpuTime,omitempty"`
+	TotalCPUTime        string `json:"totalCpuTime,omitempty"`
+	FailedCPUTime       string `json:"failedCpuTime,omitempty"`
 	TotalScheduledTime  string `json:"totalScheduledTime,omitempty"`
 	FailedScheduledTime string `json:"failedScheduledTime,omitempty"`
 	TotalBlockedTime    string `json:"totalBlockedTime,omitempty"`
@@ -305,8 +305,8 @@ type OperatorSummary struct {
 	PlanNodeID                string `json:"planNodeId"`
 	OperatorType              string `json:"operatorType"`
 	TotalDrivers              int    `json:"totalDrivers"`
-	AddInputCpu               string `json:"addInputCpu"`
-	GetOutputCpu              string `json:"getOutputCpu"`
+	AddInputCPU               string `json:"addInputCpu"`
+	GetOutputCPU              string `json:"getOutputCpu"`
 	InputPositions            int64  `json:"inputPositions"`
 	OutputPositions           int64  `json:"outputPositions"`
 	PeakUserMemoryReservation string `json:"peakUserMemoryReservation"`
@@ -322,7 +322,7 @@ type TaskInfo struct {
 
 // TaskStats holds per-task metrics within a stage.
 type TaskStats struct {
-	TotalCpuTime              string `json:"totalCpuTime,omitempty"`
+	TotalCPUTime              string `json:"totalCpuTime,omitempty"`
 	TotalScheduledTime        string `json:"totalScheduledTime,omitempty"`
 	TotalBlockedTime          string `json:"totalBlockedTime,omitempty"`
 	OutputPositions           int64  `json:"outputPositions,omitempty"`

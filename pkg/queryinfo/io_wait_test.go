@@ -256,7 +256,7 @@ func TestProjectEndToEnd_PopulatesNewFacts(t *testing.T) {
 		QueryID: "q1",
 		State:   "FINISHED",
 		QueryStats: QueryStats{
-			TotalCpuTime:           "65ms",
+			TotalCPUTime:           "65ms",
 			TotalScheduledTime:     "4.42s",
 			TotalBlockedTime:       "95.4s",
 			PhysicalInputReadTime:  "4.35s",

@@ -24,7 +24,7 @@ type Config struct {
 	ReadOnly          bool
 	ContentWindowSize int
 
-	// QueryInfoCacheTTL controll how long /v1/query/{id} responses are cached.
+	// QueryInfoCacheTTL controls how long /v1/query/{id} responses are cached.
 	// Their data is immutablle, so the cache is just trading memory for
 	// fewer 1-50Mib Json fetches. Live queries (RUNNING/QUEUED/...) are
 	// always capped internally at 30s so the agent never sees stale stats.
