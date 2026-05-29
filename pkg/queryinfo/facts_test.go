@@ -325,9 +325,9 @@ func TestComputeAmplification(t *testing.T) {
 
 func TestProjectOperators_PipelineOrder(t *testing.T) {
 	ops := []OperatorSummary{
-		{StageID: 0, PipelineID: 0, OperatorID: 2, OperatorType: "HashAggregationOperator", AddInputCpu: "1.00s", GetOutputCpu: "0.50s", InputPositions: 5000000, OutputPositions: 100000},
-		{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCpu: "2.00s", GetOutputCpu: "0.00s", InputPositions: 5000000, OutputPositions: 5000000},
-		{StageID: 0, PipelineID: 0, OperatorID: 1, OperatorType: "FilterAndProjectOperator", AddInputCpu: "0.10s", GetOutputCpu: "0.00s", InputPositions: 5000000, OutputPositions: 3000000},
+		{StageID: 0, PipelineID: 0, OperatorID: 2, OperatorType: "HashAggregationOperator", AddInputCPU: "1.00s", GetOutputCPU: "0.50s", InputPositions: 5000000, OutputPositions: 100000},
+		{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCPU: "2.00s", GetOutputCPU: "0.00s", InputPositions: 5000000, OutputPositions: 5000000},
+		{StageID: 0, PipelineID: 0, OperatorID: 1, OperatorType: "FilterAndProjectOperator", AddInputCPU: "0.10s", GetOutputCPU: "0.00s", InputPositions: 5000000, OutputPositions: 3000000},
 	}
 
 	facts, primary := projectOperators(ops)
@@ -358,9 +358,9 @@ func TestProjectOperators_PipelineOrder(t *testing.T) {
 
 func TestProjectOperators_FiltersInfrastructure(t *testing.T) {
 	ops := []OperatorSummary{
-		{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCpu: "1.00s", InputPositions: 100, OutputPositions: 100},
-		{StageID: 0, PipelineID: 0, OperatorID: 1, OperatorType: "TaskOutputOperator", AddInputCpu: "0.01s", InputPositions: 100, OutputPositions: 100},
-		{StageID: 0, PipelineID: 0, OperatorID: 2, OperatorType: "LocalExchangeSinkOperator", AddInputCpu: "0.01s", InputPositions: 100, OutputPositions: 100},
+		{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCPU: "1.00s", InputPositions: 100, OutputPositions: 100},
+		{StageID: 0, PipelineID: 0, OperatorID: 1, OperatorType: "TaskOutputOperator", AddInputCPU: "0.01s", InputPositions: 100, OutputPositions: 100},
+		{StageID: 0, PipelineID: 0, OperatorID: 2, OperatorType: "LocalExchangeSinkOperator", AddInputCPU: "0.01s", InputPositions: 100, OutputPositions: 100},
 	}
 
 	facts, _ := projectOperators(ops)
@@ -495,11 +495,11 @@ func TestProject_StageLevel_OperatorSummaries(t *testing.T) {
 					StageID: "test_query_456.0",
 					State:   "FINISHED",
 					StageStats: StageStats{
-						TotalCpuTime: "5.00s",
+						TotalCPUTime: "5.00s",
 						OperatorSummaries: []OperatorSummary{
-							{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCpu: "3.00s", GetOutputCpu: "0.50s", InputPositions: 300000, OutputPositions: 300000},
-							{StageID: 0, PipelineID: 0, OperatorID: 1, OperatorType: "LookupJoinOperator", AddInputCpu: "1.00s", GetOutputCpu: "0.20s", InputPositions: 300000, OutputPositions: 37},
-							{StageID: 0, PipelineID: 0, OperatorID: 2, OperatorType: "TaskOutputOperator", AddInputCpu: "0.01s", GetOutputCpu: "0.00s", InputPositions: 37, OutputPositions: 37},
+							{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCPU: "3.00s", GetOutputCPU: "0.50s", InputPositions: 300000, OutputPositions: 300000},
+							{StageID: 0, PipelineID: 0, OperatorID: 1, OperatorType: "LookupJoinOperator", AddInputCPU: "1.00s", GetOutputCPU: "0.20s", InputPositions: 300000, OutputPositions: 37},
+							{StageID: 0, PipelineID: 0, OperatorID: 2, OperatorType: "TaskOutputOperator", AddInputCPU: "0.01s", GetOutputCPU: "0.00s", InputPositions: 37, OutputPositions: 37},
 						},
 					},
 				},
@@ -507,9 +507,9 @@ func TestProject_StageLevel_OperatorSummaries(t *testing.T) {
 					StageID: "test_query_456.1",
 					State:   "FINISHED",
 					StageStats: StageStats{
-						TotalCpuTime: "0.10s",
+						TotalCPUTime: "0.10s",
 						OperatorSummaries: []OperatorSummary{
-							{StageID: 1, PipelineID: 0, OperatorID: 0, OperatorType: "HashBuilderOperator", AddInputCpu: "0.05s", GetOutputCpu: "0.00s", InputPositions: 100, OutputPositions: 0},
+							{StageID: 1, PipelineID: 0, OperatorID: 0, OperatorType: "HashBuilderOperator", AddInputCPU: "0.05s", GetOutputCPU: "0.00s", InputPositions: 100, OutputPositions: 0},
 						},
 					},
 				},
@@ -561,7 +561,7 @@ func TestProject_QueryLevel_OperatorsPreferred(t *testing.T) {
 		State:   "FINISHED",
 		QueryStats: QueryStats{
 			OperatorSummaries: []OperatorSummary{
-				{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCpu: "2.00s", GetOutputCpu: "0.00s", InputPositions: 1000, OutputPositions: 1000},
+				{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCPU: "2.00s", GetOutputCPU: "0.00s", InputPositions: 1000, OutputPositions: 1000},
 			},
 		},
 		Stages: &StagesWrapper{
@@ -571,7 +571,7 @@ func TestProject_QueryLevel_OperatorsPreferred(t *testing.T) {
 					State:   "FINISHED",
 					StageStats: StageStats{
 						OperatorSummaries: []OperatorSummary{
-							{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ShouldNotAppear", AddInputCpu: "0.01s", InputPositions: 1, OutputPositions: 1},
+							{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "ShouldNotAppear", AddInputCPU: "0.01s", InputPositions: 1, OutputPositions: 1},
 						},
 					},
 				},
@@ -600,18 +600,18 @@ func TestProject_OutputStage_Nested(t *testing.T) {
 		QueryID: "20260504_150328_11566_mpxwv",
 		State:   "FINISHED",
 		QueryStats: QueryStats{
-			TotalCpuTime:       "50.00ms",
+			TotalCPUTime:       "50.00ms",
 			TotalScheduledTime: "100.00ms",
 		},
 		OutputStage: &NestedStageInfo{
 			StageID: "20260504_150328_11566_mpxwv.0",
 			State:   "FINISHED",
 			StageStats: StageStats{
-				TotalCpuTime:    "5.00ms",
+				TotalCPUTime:    "5.00ms",
 				OutputDataSize:  "100B",
 				OutputPositions: 37,
 				OperatorSummaries: []OperatorSummary{
-					{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "OutputSpoolingOperator", AddInputCpu: "0.50ms", GetOutputCpu: "0.00ms", InputPositions: 37, OutputPositions: 37},
+					{StageID: 0, PipelineID: 0, OperatorID: 0, OperatorType: "OutputSpoolingOperator", AddInputCPU: "0.50ms", GetOutputCPU: "0.00ms", InputPositions: 37, OutputPositions: 37},
 				},
 			},
 			Plan: map[string]any{
@@ -624,12 +624,12 @@ func TestProject_OutputStage_Nested(t *testing.T) {
 					StageID: "20260504_150328_11566_mpxwv.1",
 					State:   "FINISHED",
 					StageStats: StageStats{
-						TotalCpuTime:           "30.00ms",
+						TotalCPUTime:           "30.00ms",
 						PhysicalInputDataSize:  "1kB",
 						PhysicalInputPositions: 37,
 						OperatorSummaries: []OperatorSummary{
-							{StageID: 1, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCpu: "2.90ms", GetOutputCpu: "0.00ms", InputPositions: 37, OutputPositions: 37},
-							{StageID: 1, PipelineID: 0, OperatorID: 1, OperatorType: "LookupJoinOperator", AddInputCpu: "0.08ms", GetOutputCpu: "0.00ms", InputPositions: 37, OutputPositions: 37},
+							{StageID: 1, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCPU: "2.90ms", GetOutputCPU: "0.00ms", InputPositions: 37, OutputPositions: 37},
+							{StageID: 1, PipelineID: 0, OperatorID: 1, OperatorType: "LookupJoinOperator", AddInputCPU: "0.08ms", GetOutputCPU: "0.00ms", InputPositions: 37, OutputPositions: 37},
 						},
 					},
 					SubStages: []NestedStageInfo{
@@ -637,12 +637,12 @@ func TestProject_OutputStage_Nested(t *testing.T) {
 							StageID: "20260504_150328_11566_mpxwv.3",
 							State:   "FINISHED",
 							StageStats: StageStats{
-								TotalCpuTime:           "19.00ms",
+								TotalCPUTime:           "19.00ms",
 								PhysicalInputDataSize:  "10MB",
 								PhysicalInputPositions: 300335,
 								OperatorSummaries: []OperatorSummary{
-									{StageID: 3, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCpu: "15.00ms", GetOutputCpu: "0.00ms", InputPositions: 300335, OutputPositions: 300335},
-									{StageID: 3, PipelineID: 1, OperatorID: 0, OperatorType: "HashBuilderOperator", AddInputCpu: "4.00ms", GetOutputCpu: "0.00ms", InputPositions: 300335, OutputPositions: 300335, PeakUserMemoryReservation: "23MB"},
+									{StageID: 3, PipelineID: 0, OperatorID: 0, OperatorType: "ScanFilterProjectOperator", AddInputCPU: "15.00ms", GetOutputCPU: "0.00ms", InputPositions: 300335, OutputPositions: 300335},
+									{StageID: 3, PipelineID: 1, OperatorID: 0, OperatorType: "HashBuilderOperator", AddInputCPU: "4.00ms", GetOutputCPU: "0.00ms", InputPositions: 300335, OutputPositions: 300335, PeakUserMemoryReservation: "23MB"},
 								},
 							},
 						},

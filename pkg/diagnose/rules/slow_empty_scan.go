@@ -66,14 +66,14 @@ func (r SlowEmptyScan) Eval(facts *queryinfo.QueryFacts) *diagnose.Finding {
 }
 
 func (r SlowEmptyScan) collectHits(scans []queryinfo.ScanPushdownFact, stageWaits map[string]int64) []slowEmptyScanHit {
-	min := r.minWaitMs()
+	minWait := r.minWaitMs()
 	var hits []slowEmptyScanHit
 	for _, s := range scans {
 		if s.OutputRows != 0 || s.PhysicalInputPositions != 0 {
 			continue
 		}
 		wait := stageWaits[s.StageID]
-		if wait < min {
+		if wait < minWait {
 			continue
 		}
 		hits = append(hits, slowEmptyScanHit{scan: s, stageWait: wait})

@@ -114,7 +114,7 @@ func TestExtractScanPushdowns_MongoLikePlan(t *testing.T) {
 
 	ops := []OperatorSummary{
 		{StageID: 7, PipelineID: 0, OperatorID: 0, PlanNodeID: "scan-0", OperatorType: "ScanFilterProjectOperator",
-			AddInputCpu: "3.00s", GetOutputCpu: "0.10s", InputPositions: 7834, OutputPositions: 0},
+			AddInputCPU: "3.00s", GetOutputCPU: "0.10s", InputPositions: 7834, OutputPositions: 0},
 	}
 
 	got := extractScanPushdowns("query.7", plan, ops, nil, nil)

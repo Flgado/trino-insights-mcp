@@ -1,70 +1,80 @@
-# Minimal lint config for v0.1.x. The goal is "every line of code committed
-# to this repo has at least been seen by gofmt, go vet, and staticcheck's
-# safest checkers" — NOT "every nitpick from every linter must be fixed."
+# Minimal lint config. Every line committed is checked by gofmt, go vet, and
+# staticcheck's safest checkers — not every nitpick from every linter.
 #
-# As the project hardens, additional linters should be enabled one at a
-# time, each in its own PR, with the noise it produces triaged.
+# As the project hardens, enable additional linters one at a time in separate PRs.
 
+version: "2"
 run:
-  timeout: 5m
   go: "1.25"
   modules-download-mode: readonly
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    - errcheck      # unchecked errors
-    - gosimple      # code-simplification suggestions
-    - govet         # built-in vet
-    - ineffassign   # ineffective assignments
-    - staticcheck   # the workhorse — bugs, performance, style
-    - unused        # unused vars, funcs, fields
-    - misspell      # English spelling in comments + strings
-    - gofmt         # formatting (also enforced as a separate CI step)
-    - revive        # successor to golint; lightweight stylistic rules
-
-linters-settings:
-  errcheck:
-    # Don't flag unchecked errors on these — they're idiomatic in this codebase.
-    exclude-functions:
-      - (io.Closer).Close
-      - fmt.Fprintf
-      - fmt.Fprintln
-      - fmt.Fprint
-  revive:
-    severity: warning
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Fprint
+    revive:
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+          disabled: true
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+          disabled: true
+        - name: unreachable-code
+        - name: unused-parameter
+          disabled: true
+        - name: var-declaration
+        - name: var-naming
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: errorf
-      - name: exported
-        disabled: true   # too noisy on v0; revisit when public API stabilises
-      - name: increment-decrement
-      - name: indent-error-flow
-      - name: range
-      - name: receiver-naming
-      - name: redefines-builtin-id
-      - name: superfluous-else
-      - name: time-naming
-      - name: unexported-return
-        disabled: true   # internal helpers often return unexported types intentionally
-      - name: unreachable-code
-      - name: unused-parameter
-        disabled: true   # interface implementations frequently have unused params
-      - name: var-declaration
-      - name: var-naming
-
+      - linters:
+          - errcheck
+          - revive
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
-    # Test files often need shorter receiver names, repeated literals, and
-    # other style "issues" that don't matter in tests.
-    - path: _test\.go
-      linters:
-        - errcheck
-        - revive
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

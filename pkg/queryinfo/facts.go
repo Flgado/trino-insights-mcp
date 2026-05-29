@@ -188,7 +188,7 @@ func Project(qi *QueryInfo) *QueryFacts {
 			QueuedMs:         ParseDurationMs(qs.QueuedTime),
 			PlanningMs:       ParseDurationMs(qs.PlanningTime),
 			ExecutionMs:      ParseDurationMs(qs.ExecutionTime),
-			TotalCPUMs:       ParseDurationMs(qs.TotalCpuTime),
+			TotalCPUMs:       ParseDurationMs(qs.TotalCPUTime),
 			TotalScheduledMs: ParseDurationMs(qs.TotalScheduledTime),
 			TotalBlockedMs:   ParseDurationMs(qs.TotalBlockedTime),
 		},
@@ -241,7 +241,7 @@ func Project(qi *QueryInfo) *QueryFacts {
 			State:                   si.State,
 			SubStageIDs:             si.SubStages,
 			PlanSummary:             extractPlanSummary(si.Plan),
-			TotalCPUMs:              ParseDurationMs(ss.TotalCpuTime),
+			TotalCPUMs:              ParseDurationMs(ss.TotalCPUTime),
 			TotalScheduledMs:        ParseDurationMs(ss.TotalScheduledTime),
 			TotalBlockedMs:          ParseDurationMs(ss.TotalBlockedTime),
 			PhysicalInputBytes:      ParseSizeBytes(ss.PhysicalInputDataSize),
@@ -473,7 +473,7 @@ func projectOperators(ops []OperatorSummary) ([]OperatorFact, string) {
 		if infrastructureOps[op.OperatorType] {
 			continue
 		}
-		cpuMs := ParseDurationMs(op.AddInputCpu) + ParseDurationMs(op.GetOutputCpu)
+		cpuMs := ParseDurationMs(op.AddInputCPU) + ParseDurationMs(op.GetOutputCPU)
 		amp := computeAmplification(op.InputPositions, op.OutputPositions)
 		facts = append(facts, OperatorFact{
 			OperatorType:  op.OperatorType,
@@ -518,7 +518,7 @@ func projectTaskStats(tasks []TaskInfo) (count int, maxCPU, minCPU, p50CPU int64
 
 	cpus := make([]int64, 0, count)
 	for _, t := range tasks {
-		cpus = append(cpus, ParseDurationMs(t.Stats.TotalCpuTime))
+		cpus = append(cpus, ParseDurationMs(t.Stats.TotalCPUTime))
 	}
 	sort.Slice(cpus, func(i, j int) bool { return cpus[i] < cpus[j] })
 
