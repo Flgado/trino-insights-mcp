@@ -1,0 +1,8 @@
+# Used by GoReleaser only. The build context contains the pre-built binary
+# (trino-insights-mcp), not go.mod or source — see .goreleaser.yaml dockers.
+FROM gcr.io/distroless/base-debian12
+
+WORKDIR /server
+COPY trino-insights-mcp .
+ENTRYPOINT ["/server/trino-insights-mcp"]
+CMD ["stdio"]

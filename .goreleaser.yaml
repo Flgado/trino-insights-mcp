@@ -108,7 +108,7 @@ dockers:
   - image_templates:
       - "ghcr.io/flgado/trino-insights-mcp:{{ .Version }}-amd64"
       - "ghcr.io/flgado/trino-insights-mcp:latest-amd64"
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--platform=linux/amd64"
@@ -124,7 +124,7 @@ dockers:
   - image_templates:
       - "ghcr.io/flgado/trino-insights-mcp:{{ .Version }}-arm64"
       - "ghcr.io/flgado/trino-insights-mcp:latest-arm64"
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
       - "--platform=linux/arm64"
