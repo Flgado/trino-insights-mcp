@@ -1,0 +1,92 @@
+name: Bug report
+description: The MCP server crashed, returned wrong data, or behaved unexpectedly.
+title: "[bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more concrete information you can share, the faster we can fix it.
+
+        > If the bug is "a diagnostic rule produced a wrong finding", please use the **False-positive / wrong finding** template instead — that one has the right fields for rule debugging.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear, concrete description of the bug.
+      placeholder: |
+        When I call analyze_query with query_id X, the server returns ...
+        I expected it to return ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimum steps a maintainer could follow to reproduce.
+      placeholder: |
+        1. Configure with TRINO_INSIGHTS_COORDINATOR_URL=...
+        2. Run `analyze_query` against query_id ...
+        3. See the response below
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server logs and tool response
+      description: Paste the server's stderr (or log file) and the full MCP tool response. Use code blocks. Redact credentials.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: trino-insights-mcp version
+      description: Output of `trino-insights-mcp --version` or the Docker tag you ran.
+      placeholder: v0.1.0 / latest / commit a1b2c3d
+    validations:
+      required: true
+
+  - type: input
+    id: trino-version
+    attributes:
+      label: Trino coordinator version
+      description: e.g. `Trino 442`
+      placeholder: Trino XYZ
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How are you running the server?
+      options:
+        - Docker (ghcr.io/flgado/trino-insights-mcp)
+        - Pre-built binary
+        - Built from source (go install / go run)
+        - Other / unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Go version (if built from source), MCP client (Cursor / Claude / Copilot / other).
+      placeholder: macOS 14.5 / Cursor latest
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submit checklist
+      options:
+        - label: I have searched existing issues and confirmed this is not a duplicate.
+          required: true
+        - label: I have redacted credentials, tokens, and any other secrets from the logs above.
+          required: true

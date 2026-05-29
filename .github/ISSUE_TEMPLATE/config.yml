@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/Flgado/trino-insights-mcp/discussions
+    about: Ask a question, share a workflow, or discuss a design idea (enable Discussions on the repo first).
+  - name: MCP protocol questions
+    url: https://modelcontextprotocol.io
+    about: For questions about the Model Context Protocol itself, not this server.

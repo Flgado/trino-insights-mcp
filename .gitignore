@@ -1,0 +1,25 @@
+trino-insights-mcp
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+
+github-mcp-server/
+
+.env
+.env.*
+!.env.example
+
+# Editor-local MCP config: may contain real coordinator URLs / credentials.
+.cursor/mcp.json
+
+# Local query-analysis artefacts produced when running the MCP against a
+# real Trino cluster. Anonymised samples that you want shipped with the
+# repo belong in examples/.
+query-analysis-*.md
+analysis-*/
+.DS_Store
